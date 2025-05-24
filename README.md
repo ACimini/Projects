@@ -1,3 +1,4 @@
-# Projects
+# Alexander Cimini – Project Repository
 
-This is a repository for Alexander Cimini and the completed and ongoing projects
+Welcome to my personal repository showcasing a collection of completed and ongoing projects. Each project reflects my interests and skills across financial engineering, data science, and software development. Below, you'll find descriptions outlining the purpose and objectives of each initiative.
+
