@@ -33,3 +33,15 @@ plt.ylabel("Annualized Volatility (%)")
 plt.xlabel("Date")
 plt.legend()
 plt.show()
+
+
+#norm_95 = model_SPX.garch_var_norm(confidence_level=0.95,time_horizon=1)
+#print(norm_95)
+#t_95 = model_SPX.garch_var_t(confidence_level=0.95,time_horizon=1)
+#print(t_95)
+
+var_SPX_500 = GARCH_Models.RollingVaRBacktest(SPX, 0.95, 500, 1, GARCH_Models.GARCHOneOne, "t")
+
+var_series , violations = var_SPX_500.var_backtest()
+print(var_series)
+print(violations)
