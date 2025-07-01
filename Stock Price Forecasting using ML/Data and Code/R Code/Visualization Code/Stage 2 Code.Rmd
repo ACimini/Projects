@@ -1,0 +1,136 @@
+---
+title: 'Stage 2: Write Up / Visualization'
+author: "Alexander Cimini"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+data = read.csv("C:/Users/alexc/OneDrive/Desktop/ECNS 460/GitHub Materials/460-Term-Project/Data/Complete_Dataset")
+```
+
+The project aims to develop an advanced price prediction model for Microsoft stock using machine learning techniques. Microsoft was selected due to its extensive historical trading data, dating back to its initial public offering (IPO) in 1986. The availability of long-term data allows the model to learn from a rich history of price movements and market trends. Furthermore, as a highly traded stock, Microsoft exhibits a lower bid-ask spread and reduced market volatility compared to lesser-traded stocks, which could lead to more stable and consistent patterns. This characteristic supports the hypothesis that highly traded stocks are likely to exhibit more predictable trends, making them well-suited for modeling efforts.
+
+To achieve reliable predictions, the chosen machine learning method is a Long Short-Term Memory (LSTM) model. Known for its ability to capture temporal dependencies, LSTM models are particularly effective for time series data. The LSTM architecture is designed to learn long-term dependencies, making it ideal for stock price prediction, where trends and cyclical patterns play a crucial role.
+
+In addition to historical price data, the model incorporates a range of external variables intended to enhance predictive accuracy by reflecting broader market conditions and company-specific events. These variables include:
+
+- Volatility Index (VIX): Provides a measure of market sentiment and investor fear, which can influence stock price movements.
+
+- Daily Stock Price Change and Percent Change: Capture the day-to-day and relative movement of Microsoft stock, which helps the model understand short-term fluctuations.
+
+- Daily Trading Volume: Reflects the liquidity and market interest in Microsoft stock on any given day, which can be a signal of investor sentiment.
+S&P 500 Close Price (SPY) and SPY Volume: Represent overall market performance and liquidity, offering a macroeconomic perspective that often correlates with individual stock movements.
+
+- Corporate Event Indicators: These markers identify significant company events, such as earnings releases, dividend payments, or stock splits. Such events are known to cause volatility and are crucial for the model to recognize as they can create atypical price behaviors.
+
+This comprehensive feature set is designed to equip the LSTM model with insights into both Microsoft-specific factors and broader market influences, ultimately supporting more accurate price forecasts. By combining historical stock data with key market and company variables, the model aims to capture a nuanced understanding of price movements, aiding in both short-term and potential long-term predictions. This project serves as a robust application of machine learning for financial forecasting, with a focus on using extensive historical data and multidimensional input to enhance model precision
+
+First, we examine the primary variable we aim to predict: the closing price of Microsoft stock. A plot of Microsoft’s closing prices from 2000 onward reveals its historical trend and volatility. Additionally, we segment the data into training, validation, and test sets to develop and evaluate the model. The training set comprises 65% of the data from 2000 to 2020, while the remaining 35% of this period is reserved for validation. Finally, for model testing, we use data from 2020 onward, providing a contemporary view of the model's predictive accuracy. 
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+data$Date = as.Date(data$Date)
+
+# Filter data for the period 2000-2020
+data_subset <- data[data$Date < as.Date("2020-01-01"), ]
+
+# Calculate the index for 65% split
+train_index <- floor(0.35 * nrow(data_subset))
+
+# Get the date at this split point
+split_date <- data_subset$Date[train_index]
+
+ggplot(data, aes(x = Date, y = StockClose)) + 
+  geom_line() + 
+  theme_bw() +
+  geom_vline(xintercept = as.Date("2020-01-01"), color = "black", linetype = "dashed") + 
+  geom_vline(xintercept = as.Date("2013-01-05"), color = "black", linetype = "dashed") +
+  geom_text(aes(x = as.Date("2005-01-01"), y = max(StockClose), label = "Training"), color = "black", hjust = -0.1, vjust = 1) +
+  geom_text(aes(x = as.Date("2015-01-01"), y = max(StockClose), label = "Validation"), color = "black", hjust = -0.1, vjust = 1) +
+  geom_text(aes(x = as.Date("2022-01-01"), y = max(StockClose), label = "Test"), color = "red", hjust = -0.1, vjust = 1)
+```
+
+We can see the exact same thing but looking at the log price as well:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data, aes(x = Date, y = log(StockClose))) + 
+  geom_line() + 
+  theme_bw() +
+  geom_vline(xintercept = as.Date("2020-01-01"), color = "black", linetype = "dashed") + 
+  geom_vline(xintercept = as.Date("2013-01-05"), color = "black", linetype = "dashed") +
+  geom_text(aes(x = as.Date("2005-01-01"), y = max(log(StockClose)), label = "Training"), color = "black", hjust = -0.1, vjust = 1) +
+  geom_text(aes(x = as.Date("2015-01-01"), y = max(log(StockClose)), label = "Validation"), color = "black", hjust = -0.1, vjust = 1) +
+  geom_text(aes(x = as.Date("2022-01-01"), y = max(log(StockClose)), label = "Test"), color = "red", hjust = -0.1, vjust = 1)
+```
+
+One of the predictor variables is the Volume of the stock traded that day, we see how the volume being traded against the price looks:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data, aes(x = Date)) + 
+  geom_col(aes(y = StockVolume / max(StockVolume) * max(StockClose)), fill = "lightblue", alpha = 0.7) +  # Scale volume to align with price
+  geom_line(aes(y = StockClose), color = "black") +                                         # Stock price line
+  theme_bw() +
+  labs(title = "Stock Closing Price with Trading Volume",
+       x = "Date",
+       y = "Closing Price") +
+  scale_y_continuous(
+    name = "Closing Price",
+    sec.axis = sec_axis(~ . * max(data$StockVolume) / max(data$StockClose), name = "Trading Volume")  # Correct scale for volume on secondary axis
+  ) 
+```
+
+We can see the same for log Pricce as well:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data, aes(x = Date)) + 
+  geom_col(aes(y = StockVolume / max(StockVolume) * max(log(StockClose))), fill = "lightblue", alpha = 0.7) +  # Scale volume to align with price
+  geom_line(aes(y = log(StockClose)), color = "black") +  # Stock price line
+  theme_bw() +
+  labs(title = "Stock Closing Price with Trading Volume",
+       x = "Date",
+       y = "Closing Price") +
+  scale_y_continuous(
+    name = "Closing Price",
+    sec.axis = sec_axis(~ . * max(data$StockVolume) / max(data$StockClose), name = "Trading Volume"))
+```
+
+A graph showing the VIX over the same time frame:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data,aes(x=Date,y=VIX)) + geom_line() + theme_bw()
+```
+
+The SPY ETF:
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data, aes(x = Date)) + 
+  geom_col(aes(y = SPY_Volume / max(SPY_Volume) * max(SPY_Close)), fill = "lightblue", alpha = 0.7) +  # Scale volume to align with price
+  geom_line(aes(y = SPY_Close), color = "black") +  # Stock price line
+  theme_bw() +
+  labs(title = "Stock Closing Price with Trading Volume",
+       x = "Date",
+       y = "Closing Price") +
+  scale_y_continuous(
+    name = "Closing Price",
+    sec.axis = sec_axis(~ . * max(data$SPY_Volume) / max(data$SPY_Close), name = "Trading Volume"))
+```
+
+The log of the SPY price against the Log of the Stock Closing Price with both the stock Volume included: Black = Stock
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data, aes(x = Date)) + 
+  geom_col(aes(y = StockVolume / max(StockVolume) * max(log(StockClose))), fill = "lightblue", alpha = 0.7) +  # Scale volume to align with price
+  geom_line(aes(y = log(StockClose)), color = "black") +  # Stock price line
+  geom_line(aes(y=log(SPY_Close)), color = 'blue') +
+  theme_bw() +
+  labs(title = "Closing Prices with Trading Volume",
+       x = "Date",
+       y = "Closing Price") +
+  scale_y_continuous(
+    name = "Closing Price",
+    sec.axis = sec_axis(~ . * max(data$StockVolume) / max(data$StockClose), name = "Trading Volume"))
+```
+
+From these variables and maybe the inclusion of others we can start to build up the model and see through the validation data if this modeling approach is valid for the data.
