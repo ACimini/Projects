@@ -13,3 +13,8 @@ In this project, we replicate and extend the findings of a recent paper on the b
 ## [Price Forecasting Using Machine Learning Analysis](https://github.com/ACimini/Projects/blob/main/Stock%20Price%20Forecasting%20using%20ML/Price%20Forecasting%20Analysis%20FINAL.pdf)
 
 Understanding and predicting stock price movements is a critical challenge in financial markets. This project seeks to address the research question: Can an LSTM accurately forecast the day ahead Microsoft stock closing price using historical price data and additional market indicators? To answer this, a machine-learning model was developed to predict the closing price of Microsoft stock one day ahead.
+
+
+## [Portfolio Replication using The Binomial Tree Method to Accurately Price Options](https://github.com/ACimini/Projects/blob/main/Portfolio%20Replication%20using%20The%20Binomial%20Tree%20Method%20to%20Accurately%20Price%20Options/Portfolio%20Replication%20using%20The%20Binomial%20Tree%20Method%20to%20Accurately%20Price%20Options.pdf)
+
+The motivation for exploring portfolio replication techniques as a method for option pricing stems from several key considerations natural in modern financial markets.
