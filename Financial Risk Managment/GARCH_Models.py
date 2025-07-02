@@ -105,11 +105,14 @@ class RollingVaRBacktest(object):
 
         hit_rate = np.mean(violations)
         expected_hit_rate = 1 - self.confidence_interval
-        kupiec_p = binomtest(np.sum(violations), len(violations), expected_hit_rate, alternative='two-sided')
+
+        num_violations = int(np.sum(violations))
+        test_result = binomtest(num_violations, len(violations), (1 - self.confidence_interval), alternative='two-sided')
 
         print(f"Backtest Results ({self.method}):")
         print(f"  Violations: {np.sum(violations)} out of {len(violations)}")
         print(f"  Hit Rate: {hit_rate:.4f} (Expected: {expected_hit_rate:.4f})")
-        print(f"  Kupiec Test p-value: {kupiec_p.pvalue:.4f}")
+        print(f"  Test p-value: {test_result.pvalue:.4f}")
 
-        return pd.Series(var_series), pd.Series(violations)
+        return pd.Series(var_series), pd.Series(violations.flatten())
+
